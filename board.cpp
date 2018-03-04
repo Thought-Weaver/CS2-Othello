@@ -162,6 +162,10 @@ int Board::countWhite() {
     return taken.count() - black.count();
 }
 
+int Board::countDiff(Side side) {
+    return (side == BLACK) ? countBlack() - countWhite() : countWhite() - countBlack();
+}
+
 /*
  * Sets the board state given an 8x8 char array where 'w' indicates a white
  * piece and 'b' indicates a black piece. Mainly for testing purposes.
@@ -177,4 +181,12 @@ void Board::setBoard(char data[]) {
             taken.set(i);
         }
     }
+}
+
+/*
+ * Checks if a piece at a given location belongs to the player's side.
+ */
+bool Board::isPlayerSide(Side side, int x, int y)
+{
+    return get(side, x, y);
 }

@@ -11,10 +11,8 @@ private:
     bitset<64> black;
     bitset<64> taken;
 
-    bool occupied(int x, int y);
     bool get(Side side, int x, int y);
     void set(Side side, int x, int y);
-    bool onBoard(int x, int y);
 
 public:
     Board();
@@ -24,10 +22,16 @@ public:
     bool isDone();
     bool hasMoves(Side side);
     bool checkMove(Move *m, Side side);
+    bool isPlayerSide(Side side, int x, int y);
+    bool onBoard(int x, int y);
+    bool occupied(int x, int y);
+
     void doMove(Move *m, Side side);
+
     int count(Side side);
     int countBlack();
     int countWhite();
+    int countDiff(Side side);
 
     void setBoard(char data[]);
 };
