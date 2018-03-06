@@ -2,8 +2,6 @@
 #include <vector>
 #include <tuple>
 
-#define DEPTH 2
-
 /*
  * Constructor for the player; initialize everything here. The side your AI is
  * on (BLACK or WHITE) is passed in as "side". The constructor must finish
@@ -15,11 +13,14 @@ Player::Player(Side side) {
     player_side = side;
     board = new Board();
 
-    /*
-     * TODO: Do any initialization you need to do here (setting up the board,
-     * precalculating things, etc.) However, remember that you will only have
-     * 30 seconds.
-     */
+    if (testingMinimax)
+    {
+        depth = 2;
+    }
+    else
+    {
+        depth = 4;
+    }
 }
 
 /*
@@ -271,13 +272,13 @@ vector<vector<tuple<Move *, int, int>>> Player::createDecisionTree(uint depth)
             branches.push_back(branch);
             moves.push_back(current_moves);
         }
-    }
 
-    for (uint i = 0; i < branches.size(); ++i)
-    {
-        for (uint j = 0; j < branches[i].size(); ++j)
+        if (i > 0)
         {
-            delete branches[i][j];
+            for (uint j = 0; j < branches[i - 1].size(); ++j)
+            {
+                delete branches[i - 1][j];
+            }
         }
     }
 
@@ -317,13 +318,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         return move;
     }*/
 
-    vector<vector<tuple<Move *, int, int>>> moves = createDecisionTree(DEPTH);
-
-    for (uint i = 0; i < moves.size(); ++i)
-    {
-        std::cerr << moves[i].size() << std::endl;
-    }
-    std::cerr << std::endl;
+    vector<vector<tuple<Move *, int, int>>> moves = createDecisionTree(depth);
 
     int max_val = 0, max_index = 0;
 
