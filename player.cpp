@@ -8,6 +8,7 @@ Player::Player(Side temp) {
     testingMinimax = false;
     side = temp;
     board = Board();
+
     if (testingMinimax)
     {
         depth = 2;
