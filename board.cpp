@@ -1,4 +1,20 @@
 #include "board.hpp"
+#include <iostream>
+#include <string>
+
+// Adapted from:
+// https://courses.cs.washington.edu/courses/cse573/04au/Project/mini1/RUSSIA/Final_Paper.pdf
+const int static_scores[64] = 
+{
+      4, -3, 2, 2, 2, 2, -3, 4, 
+      -3, -4, -1, -1, -1, -1, -4, -3, 
+      2, -1, 1, 0, 0, 1, -1, 2,
+       2, -1, 0, 1, 1, 0, -1, 2,
+       2, -1, 0, 1, 1, 0, -1, 2, 
+      2, -1, 1, 0, 0, 1, -1, 2, 
+      -3, -4, -1, -1, -1, -1, -4, -3, 
+      4, -3, 2, 2, 2, 2, -3, 4
+};
 
 /*
  * Make a standard 8x8 othello board and initialize it to the standard setup.
@@ -132,6 +148,8 @@ void Board::doMove(Move *m, Side side) {
                 y += dy;
                 while (onBoard(x, y) && get(other, x, y)) {
                     set(side, x, y);
+                    m->flipped[m->num_flipped] = x + 8 * y;
+                    m->num_flipped += 1;
                     x += dx;
                     y += dy;
                 }
@@ -139,6 +157,14 @@ void Board::doMove(Move *m, Side side) {
         }
     }
     set(side, X, Y);
+}
+
+void Board::undoMove(Move *m) {
+    taken.set(m->getX() + m->getY() * 8, 0);
+    black.set(m->getX() + m->getY() * 8, 0);
+    for (int i = 0; i < m->num_flipped; ++i) {
+        black.flip(m->flipped[i]);
+    }
 }
 
 /*
@@ -162,10 +188,6 @@ int Board::countWhite() {
     return taken.count() - black.count();
 }
 
-int Board::countDiff(Side side) {
-    return (side == BLACK) ? countBlack() - countWhite() : countWhite() - countBlack();
-}
-
 /*
  * Sets the board state given an 8x8 char array where 'w' indicates a white
  * piece and 'b' indicates a black piece. Mainly for testing purposes.
@@ -183,10 +205,151 @@ void Board::setBoard(char data[]) {
     }
 }
 
-/*
- * Checks if a piece at a given location belongs to the player's side.
- */
-bool Board::isPlayerSide(Side side, int x, int y)
+int Board::getDiffScore(Side side)
 {
-    return get(side, x, y);
+    return count(side) - count((side == WHITE) ? BLACK : WHITE);
+}
+
+
+double Board::getBoardScore(Side side)
+{
+    Move* possible;
+    double white_count = 0;
+    double black_count = 0;
+    for (int i = 0; i < BOARDSIZE; ++i)
+    {
+        for (int j = 0; j < BOARDSIZE; ++j)
+        {
+            possible = new Move(i, j);
+            if (checkMove(possible, BLACK))
+            {
+                ++black_count;
+            }
+            if (checkMove(possible, WHITE))
+            {
+                ++white_count;
+            }
+            delete possible;
+        }
+    }
+
+    double move_diff_val = 0;
+    if (black_count + white_count != 0)
+    {
+        if (side == BLACK)
+        {
+            move_diff_val = 100 * (black_count - white_count) / (black_count + white_count);
+        }
+        else
+        {  
+            move_diff_val = 100 * (white_count - black_count) / (black_count + white_count);
+        }
+    }
+    
+    double white_move_score = 0;
+    double black_move_score = 0;
+    for (int i = 0; i < BOARDSIZE * BOARDSIZE; ++i)
+    {
+        if (taken[i])
+        {
+            if (black[i])
+            {
+                black_move_score += static_scores[i];
+            }
+            else
+            {
+                white_move_score += static_scores[i];
+            }
+        }
+    }
+    
+    double mob_diff_val = 0;
+    if (black_move_score + white_move_score != 0)
+    {
+        if (side == BLACK)
+        {
+            mob_diff_val = 100 * (black_move_score - white_move_score) / (black_move_score + white_move_score);
+        }
+        else
+        {
+            mob_diff_val = 100 * (white_move_score - black_move_score) / (black_move_score + white_move_score);
+        }
+    }
+    
+    double piece_diff_val;
+    if (side == BLACK)
+    {
+        piece_diff_val = 100 * (double) (count(BLACK) - count(WHITE)) / (count(BLACK) + count(WHITE));
+    }
+    else
+    {
+        piece_diff_val = 100 * (double) (count(WHITE) - count(BLACK)) / (count(BLACK) + count(WHITE));
+    }
+    
+    double black_corners = 0;
+    double white_corners = 0;
+    double black_corner_closeness = 0;
+    double white_corner_closeness = 0;
+    double initial[4] = {0, 7, 56, 63};
+    double to_check[4][3] = {{1, 8, 9}, {6, 14, 15}, {48, 49, 57}, {54, 55, 62}};
+    for (int i = 0; i < 4; ++i)
+    {
+        if (taken[initial[i]])
+        {
+            if (black[initial[i]])
+            {
+                ++black_corners;
+            }
+            else
+            {
+                ++white_corners;
+            }
+        }
+        else
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                if (taken[to_check[i][j]])
+                {
+                    if (black[to_check[i][j]])
+                    {
+                        ++black_corner_closeness;
+                    }
+                    else
+                    {
+                        ++white_corner_closeness;
+                    }
+                }
+            }
+        }
+    }
+    
+    double cc_val = 0;
+    if (white_corner_closeness + black_corner_closeness != 0)
+    {
+        if (side == BLACK)
+        {
+            cc_val = 100 * (white_corner_closeness - black_corner_closeness) / (black_corner_closeness + white_corner_closeness);
+        }
+        else
+        {
+            cc_val = 100 * (black_corner_closeness - white_corner_closeness) / (black_corner_closeness + white_corner_closeness);
+        }
+    }
+    
+    double corner_diff_val = 0;
+    if (black_corners + white_corners != 0)
+    {
+        if (side == BLACK)
+        {
+            corner_diff_val = 100 * (black_corners - white_corners) 
+                                         / (black_corners + white_corners);
+        }
+        else
+        {
+            corner_diff_val = 100 * (white_corners - black_corners) / (black_corners + white_corners);
+        }
+    }
+    
+    return piece_diff_val / 10 + (mob_diff_val + move_diff_val) + 2 * cc_val + 10 * corner_diff_val;
 }

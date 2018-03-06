@@ -20,18 +20,19 @@ int main(int argc, char *argv[]) {
         ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '
     };
     Board *board = new Board();
-    board->setBoard(boardData);
+    // board->setBoard(boardData);
 
     // Initialize player as the white player, and set testing_minimax flag.
     Player *player = new Player(WHITE);
     player->testingMinimax = true;
-    player->setBoard(board);
+
+    player->board = *board;
 
     // Get player's move and check if it's right.
     Move *move = player->doMove(nullptr, 0);
 
-    if (move != nullptr && move->x == 1 && move->y == 1) {
-        std::cout << "Correct move: (1, 1)" << std::endl;;
+    if (move != nullptr && move->x == 5 && move->y == 3) {
+        std::cout << "Correct move: (5, 3)" << std::endl;;
     } else {
         std::cout << "Wrong move: got ";
         if (move == nullptr) {
@@ -39,7 +40,7 @@ int main(int argc, char *argv[]) {
         } else {
             std::cout << "(" << move->x << ", " << move->y << ")";
         }
-        std::cout << ", expected (1, 1)" << std::endl;
+        std::cout << ", expected (5, 3)" << std::endl;
     }
 
     return 0;
