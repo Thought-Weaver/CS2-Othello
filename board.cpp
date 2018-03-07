@@ -214,6 +214,7 @@ int Board::getDiffScore(Side side)
 double Board::getBoardScore(Side side)
 {
     Move* possible;
+    double total = 0;
     double white_count = 0;
     double black_count = 0;
     for (int i = 0; i < BOARDSIZE; ++i)
@@ -245,34 +246,34 @@ double Board::getBoardScore(Side side)
             move_diff_val = 100 * (white_count - black_count) / (black_count + white_count);
         }
     }
-    
-    double white_move_score = 0;
-    double black_move_score = 0;
+        
+    double white_ms = 0;
+    double black_ms = 0;
     for (int i = 0; i < BOARDSIZE * BOARDSIZE; ++i)
     {
         if (taken[i])
         {
             if (black[i])
             {
-                black_move_score += static_scores[i];
+                black_ms += static_scores[i];
             }
             else
             {
-                white_move_score += static_scores[i];
+                white_ms += static_scores[i];
             }
         }
     }
     
     double mob_diff_val = 0;
-    if (black_move_score + white_move_score != 0)
+    if (black_ms + white_ms != 0)
     {
         if (side == BLACK)
         {
-            mob_diff_val = 100 * (black_move_score - white_move_score) / (black_move_score + white_move_score);
+            mob_diff_val = 100 * (black_ms - white_ms) / (black_ms + white_ms);
         }
         else
         {
-            mob_diff_val = 100 * (white_move_score - black_move_score) / (black_move_score + white_move_score);
+            mob_diff_val = 100 * (white_ms - black_ms) / (black_ms + white_ms);
         }
     }
     
@@ -288,8 +289,8 @@ double Board::getBoardScore(Side side)
     
     double black_corners = 0;
     double white_corners = 0;
-    double black_corner_closeness = 0;
-    double white_corner_closeness = 0;
+    double black_cc = 0;
+    double white_cc = 0;
     double initial[4] = {0, 7, 56, 63};
     double to_check[4][3] = {{1, 8, 9}, {6, 14, 15}, {48, 49, 57}, {54, 55, 62}};
     for (int i = 0; i < 4; ++i)
@@ -313,11 +314,11 @@ double Board::getBoardScore(Side side)
                 {
                     if (black[to_check[i][j]])
                     {
-                        ++black_corner_closeness;
+                        ++black_cc;
                     }
                     else
                     {
-                        ++white_corner_closeness;
+                        ++white_cc;
                     }
                 }
             }
@@ -325,15 +326,15 @@ double Board::getBoardScore(Side side)
     }
     
     double cc_val = 0;
-    if (white_corner_closeness + black_corner_closeness != 0)
+    if (white_cc + black_cc != 0)
     {
         if (side == BLACK)
         {
-            cc_val = 100 * (white_corner_closeness - black_corner_closeness) / (black_corner_closeness + white_corner_closeness);
+            cc_val = 100 * (white_cc - black_cc) / (black_cc + white_cc);
         }
         else
         {
-            cc_val = 100 * (black_corner_closeness - white_corner_closeness) / (black_corner_closeness + white_corner_closeness);
+            cc_val = 100 * (black_cc - white_cc) / (black_cc + white_cc);
         }
     }
     
@@ -342,8 +343,7 @@ double Board::getBoardScore(Side side)
     {
         if (side == BLACK)
         {
-            corner_diff_val = 100 * (black_corners - white_corners) 
-                                         / (black_corners + white_corners);
+            corner_diff_val = 100 * (black_corners - white_corners) / (black_corners + white_corners);
         }
         else
         {
