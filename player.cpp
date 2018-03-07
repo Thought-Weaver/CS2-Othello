@@ -106,12 +106,6 @@ Move *Player::doNaiveMove() {
     return best_move;
 }
 
-/**
- * TODO: fix it in the case where it wants to minimize?
- * @param opponentsMove
- * @param msleft
- * @return 
- */
 Move *Player::doABMinimaxMove()
 {
     Move *current_move;
