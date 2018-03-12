@@ -8,14 +8,19 @@ Player::Player(Side temp) {
     testingMinimax = false;
     side = temp;
     board = Board();
+    made_moves = "";
 
     if (testingMinimax)
     {
         depth = 2;
     }
-    else
+    else if (!testingMinimax && side == BLACK)
     {
-        depth = 4;
+        depth = 6;
+    }
+    else if (!testingMinimax && side == WHITE)
+    {
+        depth = 5;
     }
 }
 
@@ -106,19 +111,13 @@ Move *Player::doNaiveMove() {
     return best_move;
 }
 
-/**
- * TODO: fix it in the case where it wants to minimize?
- * @param opponentsMove
- * @param msleft
- * @return 
- */
 Move *Player::doABMinimaxMove()
 {
+    vector<Board*> current_boards;
+    vector<Move*> current_moves;
+    vector<double> result_scores;
+    vector<double> original_scores;
     Move *current_move;
-    Move *best_move = nullptr;
-
-    double current_score;
-    double best_score;
 
     for (int i = 0; i < BOARDSIZE; ++i)
     {
@@ -127,25 +126,10 @@ Move *Player::doABMinimaxMove()
             current_move = new Move(i, j);
             if (board.checkMove(current_move, side))
             {
-                board.doMove(current_move, side);
-                current_score = getABScore(depth, LOW, HIGH);
-                board.undoMove(current_move);
-
-                if (best_move == nullptr)
-                {
-                    best_move = current_move;
-                    best_score = current_score;
-                }
-                else if (current_score >= best_score)
-                {
-                    delete best_move;
-                    best_move = current_move;
-                    best_score = current_score;
-                }
-                else
-                {
-                    delete current_move;
-                }
+                Board *b = board.copy();
+                b->doMove(current_move, side);
+                current_moves.push_back(current_move);
+                current_boards.push_back(b);
             }
             else
             {
@@ -154,37 +138,61 @@ Move *Player::doABMinimaxMove()
         }
     }
 
+    for (uint i = 0; i < current_moves.size(); ++i)
+    {
+        int not_taken = BOARDSIZE * BOARDSIZE - (current_boards[i]->count(WHITE) + current_boards[i]->count(BLACK));
+        int d = depth;
+        if (side == BLACK && not_taken > 30 && not_taken < 50)
+        {
+            d -= 1;
+        }
+
+        auto fut = async(launch::async, &Player::getABScore, this, *current_boards[i], d, LOW, HIGH);
+        result_scores.push_back(fut.get());
+    }
+
+    reverse(result_scores.begin(), result_scores.end());
+    Move *best_move = current_moves[current_moves.size() - 1 - distance(result_scores.begin(), max_element(result_scores.begin(), result_scores.end()))]->copy();
+
+    for (uint i = 0; i < current_moves.size(); ++i)
+    {
+        delete current_moves[i];
+        delete current_boards[i];
+    }
+
+    cerr << "I chose (" << best_move->getX() << "," << best_move->getY() << ")" << endl;
+
     return best_move;
 }
 
-double Player::getABScore(int depth, double alpha, double beta)
+double Player::getABScore(Board b, int d, double alpha, double beta)
 {
-    if (depth == 0)
+    if (d == 0)
     {
-        return board.getBoardScore(side);
+        return b.getBoardScore(side);
     }
 
     double value = 0;
-    double best_value = (depth % 2 != 0) ? LOW : HIGH;
+    double best_value = (d % 2 != 0) ? LOW : HIGH;
     bool played = false;
 
     Move *possible_move;
     Side opposite = (side == WHITE) ? BLACK : WHITE;
 
-    if (depth % 2 != 0)
+    if (d % 2 != 0)
     {
         for (int i = 0; i < BOARDSIZE; ++i)
         {
             for (int j = 0; j < BOARDSIZE; ++j)
             {
                 possible_move = new Move(i, j);
-                if (board.checkMove(possible_move, side))
+                if (b.checkMove(possible_move, side))
                 {
                     played = true;
 
-                    board.doMove(possible_move, side);
-                    value = getABScore(depth - 1, alpha, beta);
-                    board.undoMove(possible_move);
+                    b.doMove(possible_move, side);
+                    value = getABScore(b, d - 1, alpha, beta);
+                    b.undoMove(possible_move);
 
                     best_value = max(value, best_value);
                     alpha = max(alpha, best_value);
@@ -206,7 +214,7 @@ double Player::getABScore(int depth, double alpha, double beta)
         }
         else
         {
-            return getABScore(depth - 1, alpha, beta);
+            return getABScore(b, d - 1, alpha, beta);
         }
     }
     else
@@ -216,12 +224,13 @@ double Player::getABScore(int depth, double alpha, double beta)
             for (int j = 0; j < BOARDSIZE; ++j)
             {
                 possible_move = new Move(i, j);
-                if (board.checkMove(possible_move, opposite))
+                if (b.checkMove(possible_move, opposite))
                 {
                     played = true;
-                    board.doMove(possible_move, opposite);
-                    value = getABScore(depth - 1, alpha, beta);
-                    board.undoMove(possible_move);
+
+                    b.doMove(possible_move, opposite);
+                    value = getABScore(b, d - 1, alpha, beta);
+                    b.undoMove(possible_move);
 
                     best_value = min(best_value, value);
                     beta = min(beta, best_value);
@@ -243,7 +252,19 @@ double Player::getABScore(int depth, double alpha, double beta)
         }
         else
         {
-            return getABScore(depth - 1, alpha, beta);
+            return getABScore(b, d - 1, alpha, beta);
         }
     }
+}
+
+void Player::LoadOpeningMoves()
+{
+    ifstream file("opening_moves");
+    string str; 
+    while (getline(file, str))
+    {
+        transform(str.begin(), str.end(), str.begin(), ::tolower);
+        opening_moves.push_back(str);
+    }
+    file.close();
 }

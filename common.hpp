@@ -1,7 +1,9 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
+#include <algorithm>
 
 #define BOARDSIZE 8
+#define TOURNEY_TIME 300000
 
 enum Side { 
     WHITE, BLACK
@@ -27,6 +29,14 @@ public:
 
     void setX(int x) { this->x = x; }
     void setY(int y) { this->y = y; }
+
+    Move *copy()
+    {
+        Move *move = new Move(this->x, this->y);
+        std::copy(std::begin(this->flipped), std::end(this->flipped), std::begin(move->flipped));
+        move->num_flipped = this->num_flipped;
+        return move;
+    }
 };
 
 #endif

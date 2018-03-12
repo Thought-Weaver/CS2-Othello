@@ -6,26 +6,26 @@
 // https://courses.cs.washington.edu/courses/cse573/04au/Project/mini1/RUSSIA/Final_Paper.pdf
 const int static_scores[64] = 
 {
-      4, -3, 2, 2, 2, 2, -3, 4, 
+       4, -3,  2,  2,  2,  2, -3,  4, 
       -3, -4, -1, -1, -1, -1, -4, -3, 
-      2, -1, 1, 0, 0, 1, -1, 2,
-       2, -1, 0, 1, 1, 0, -1, 2,
-       2, -1, 0, 1, 1, 0, -1, 2, 
-      2, -1, 1, 0, 0, 1, -1, 2, 
+       2, -1,  1,  0,  0,  1, -1,  2,
+       2, -1,  0,  1,  1,  0, -1,  2,
+       2, -1,  0,  1,  1,  0, -1,  2, 
+       2, -1,  1,  0,  0,  1, -1,  2, 
       -3, -4, -1, -1, -1, -1, -4, -3, 
-      4, -3, 2, 2, 2, 2, -3, 4
+       4, -3,  2,  2,  2,  2, -3,  4
 };
 
 /*
- * Make a standard 8x8 othello board and initialize it to the standard setup.
+ * Make a standard BOARDSIZExBOARDSIZE othello board and initialize it to the standard setup.
  */
 Board::Board() {
-    taken.set(3 + 8 * 3);
-    taken.set(3 + 8 * 4);
-    taken.set(4 + 8 * 3);
-    taken.set(4 + 8 * 4);
-    black.set(4 + 8 * 3);
-    black.set(3 + 8 * 4);
+    taken.set(3 + BOARDSIZE * 3);
+    taken.set(3 + BOARDSIZE * 4);
+    taken.set(4 + BOARDSIZE * 3);
+    taken.set(4 + BOARDSIZE * 4);
+    black.set(4 + BOARDSIZE * 3);
+    black.set(3 + BOARDSIZE * 4);
 }
 
 /*
@@ -45,20 +45,20 @@ Board *Board::copy() {
 }
 
 bool Board::occupied(int x, int y) {
-    return taken[x + 8*y];
+    return taken[x + BOARDSIZE*y];
 }
 
 bool Board::get(Side side, int x, int y) {
-    return occupied(x, y) && (black[x + 8*y] == (side == BLACK));
+    return occupied(x, y) && (black[x + BOARDSIZE*y] == (side == BLACK));
 }
 
 void Board::set(Side side, int x, int y) {
-    taken.set(x + 8*y);
-    black.set(x + 8*y, side == BLACK);
+    taken.set(x + BOARDSIZE*y);
+    black.set(x + BOARDSIZE*y, side == BLACK);
 }
 
 bool Board::onBoard(int x, int y) {
-    return(0 <= x && x < 8 && 0 <= y && y < 8);
+    return(0 <= x && x < BOARDSIZE && 0 <= y && y < BOARDSIZE);
 }
 
 
@@ -74,8 +74,8 @@ bool Board::isDone() {
  * Returns true if there are legal moves for the given side.
  */
 bool Board::hasMoves(Side side) {
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
+    for (int i = 0; i < BOARDSIZE; i++) {
+        for (int j = 0; j < BOARDSIZE; j++) {
             Move move(i, j);
             if (checkMove(&move, side)) return true;
         }
@@ -148,7 +148,7 @@ void Board::doMove(Move *m, Side side) {
                 y += dy;
                 while (onBoard(x, y) && get(other, x, y)) {
                     set(side, x, y);
-                    m->flipped[m->num_flipped] = x + 8 * y;
+                    m->flipped[m->num_flipped] = x + BOARDSIZE * y;
                     m->num_flipped += 1;
                     x += dx;
                     y += dy;
@@ -160,8 +160,8 @@ void Board::doMove(Move *m, Side side) {
 }
 
 void Board::undoMove(Move *m) {
-    taken.set(m->getX() + m->getY() * 8, 0);
-    black.set(m->getX() + m->getY() * 8, 0);
+    taken.set(m->getX() + m->getY() * BOARDSIZE, 0);
+    black.set(m->getX() + m->getY() * BOARDSIZE, 0);
     for (int i = 0; i < m->num_flipped; ++i) {
         black.flip(m->flipped[i]);
     }
@@ -189,13 +189,13 @@ int Board::countWhite() {
 }
 
 /*
- * Sets the board state given an 8x8 char array where 'w' indicates a white
+ * Sets the board state given an BOARDSIZExBOARDSIZE char array where 'w' indicates a white
  * piece and 'b' indicates a black piece. Mainly for testing purposes.
  */
 void Board::setBoard(char data[]) {
     taken.reset();
     black.reset();
-    for (int i = 0; i < 64; i++) {
+    for (int i = 0; i < BOARDSIZE*BOARDSIZE; i++) {
         if (data[i] == 'b') {
             taken.set(i);
             black.set(i);
@@ -288,8 +288,8 @@ double Board::getBoardScore(Side side)
     
     double black_corners = 0;
     double white_corners = 0;
-    double black_corner_closeness = 0;
-    double white_corner_closeness = 0;
+    double black_cc = 0;
+    double white_cc = 0;
     double initial[4] = {0, 7, 56, 63};
     double to_check[4][3] = {{1, 8, 9}, {6, 14, 15}, {48, 49, 57}, {54, 55, 62}};
     for (int i = 0; i < 4; ++i)
@@ -313,11 +313,11 @@ double Board::getBoardScore(Side side)
                 {
                     if (black[to_check[i][j]])
                     {
-                        ++black_corner_closeness;
+                        ++black_cc;
                     }
                     else
                     {
-                        ++white_corner_closeness;
+                        ++white_cc;
                     }
                 }
             }
@@ -325,15 +325,15 @@ double Board::getBoardScore(Side side)
     }
     
     double cc_val = 0;
-    if (white_corner_closeness + black_corner_closeness != 0)
+    if (white_cc + black_cc != 0)
     {
         if (side == BLACK)
         {
-            cc_val = 100 * (white_corner_closeness - black_corner_closeness) / (black_corner_closeness + white_corner_closeness);
+            cc_val = 100 * (white_cc - black_cc) / (black_cc + white_cc);
         }
         else
         {
-            cc_val = 100 * (black_corner_closeness - white_corner_closeness) / (black_corner_closeness + white_corner_closeness);
+            cc_val = 100 * (black_cc - white_cc) / (black_cc + white_cc);
         }
     }
     
@@ -342,8 +342,7 @@ double Board::getBoardScore(Side side)
     {
         if (side == BLACK)
         {
-            corner_diff_val = 100 * (black_corners - white_corners) 
-                                         / (black_corners + white_corners);
+            corner_diff_val = 100 * (black_corners - white_corners) / (black_corners + white_corners);
         }
         else
         {
@@ -351,5 +350,5 @@ double Board::getBoardScore(Side side)
         }
     }
     
-    return piece_diff_val / 10 + (mob_diff_val + move_diff_val) + 2 * cc_val + 10 * corner_diff_val;
+    return piece_diff_val / 10.0 + (mob_diff_val + move_diff_val) + 2.0 * cc_val + 10.0 * corner_diff_val;
 }

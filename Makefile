@@ -1,5 +1,5 @@
 CC          = g++
-CFLAGS      = -Wall -pedantic -ggdb --std=c++11 -pthread
+CFLAGS      = -Wall -pedantic -ggdb --std=c++11 -pthread -Ofast
 OBJS        = player.o board.o
 PLAYERNAME  = Cassio
 
