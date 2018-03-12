@@ -245,34 +245,34 @@ double Board::getBoardScore(Side side)
             move_diff_val = 100 * (white_count - black_count) / (black_count + white_count);
         }
     }
-    
-    double white_move_score = 0;
-    double black_move_score = 0;
+        
+    double white_ms = 0;
+    double black_ms = 0;
     for (int i = 0; i < BOARDSIZE * BOARDSIZE; ++i)
     {
         if (taken[i])
         {
             if (black[i])
             {
-                black_move_score += static_scores[i];
+                black_ms += static_scores[i];
             }
             else
             {
-                white_move_score += static_scores[i];
+                white_ms += static_scores[i];
             }
         }
     }
     
     double mob_diff_val = 0;
-    if (black_move_score + white_move_score != 0)
+    if (black_ms + white_ms != 0)
     {
         if (side == BLACK)
         {
-            mob_diff_val = 100 * (black_move_score - white_move_score) / (black_move_score + white_move_score);
+            mob_diff_val = 100 * (black_ms - white_ms) / (black_ms + white_ms);
         }
         else
         {
-            mob_diff_val = 100 * (white_move_score - black_move_score) / (black_move_score + white_move_score);
+            mob_diff_val = 100 * (white_ms - black_ms) / (black_ms + white_ms);
         }
     }
     
