@@ -198,7 +198,7 @@ double Player::getABScore(Board b, int d, double alpha, double beta)
 {
     if (d == 0)
     {
-        return (side == WHITE) ? b.getBoardScore(side) : b.getBlackBoardScore();
+        return (side == WHITE) ? b.getBlackBoardScore() : b.getBoardScore(side);
     }
 
     double value = 0;

@@ -486,5 +486,5 @@ double Board::getBlackBoardScore()
         mobility = -(100.0 * white_score)/(black_score + white_score);
     }
 
-    return (10.0 * diff) + (801.724 * corners) + (382.026 * corner_diff) + (78.922 * mobility) + (74.396 * frontiers) + (10 * state);
+    return -((10.0 * diff) + (801.724 * corners) + (382.026 * corner_diff) + (78.922 * mobility) + (74.396 * frontiers) + (10 * state));
 }
