@@ -3,7 +3,9 @@
 #include <algorithm>
 
 #define BOARDSIZE 8
-#define TOURNEY_TIME 300000
+#define AVGMOVES 25.0
+#define TOURNEYTIME 300000.0
+#define TIMELIMIT TOURNEYTIME / AVGMOVES
 
 enum Side { 
     WHITE, BLACK

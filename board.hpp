@@ -32,9 +32,11 @@ public:
     int count(Side side);
     int countBlack();
     int countWhite();
+    int numValidMoves(Side side);
     
     int getDiffScore(Side side);
     double getBoardScore(Side side);
+    double getBlackBoardScore();
 
     void setBoard(char data[]);
 };

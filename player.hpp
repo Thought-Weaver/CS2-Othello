@@ -10,6 +10,7 @@
 #include <thread>
 #include <algorithm>
 #include <fstream>
+#include <time.h>
 
 using namespace std;
 
@@ -23,19 +24,20 @@ public:
     Move *doABMinimaxMove();
 
     double getABScore(Board b, int depth, double alpha, double beta);
-
     void LoadOpeningMoves();
 
     // Flag to tell if the player is running within the test_minimax context
     bool testingMinimax;
 
     int depth;
-
-    Side side;
-    Board board;
+    int turns_taken;
+    double curr_time;
 
     vector<string> opening_moves;
     string made_moves;
+
+    Side side;
+    Board board;
 };
 
 #endif
